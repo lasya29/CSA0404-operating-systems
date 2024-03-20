@@ -1,0 +1,68 @@
+#include <stdio.h>
+
+#define MAX_PROCESSES 10
+#define TIME_QUANTUM 4
+
+typedef struct {
+    int pid; // Process ID
+    int arrival_time; // Arrival time
+    int burst_time; // Burst time
+    int remaining_time; // Remaining burst time
+    int turnaround_time; // Turnaround time
+    int waiting_time; // Waiting time
+} Process;
+
+void simulate(Process processes[], int n) {
+    int time = 0;
+    int completed = 0;
+    int quantum_remaining = 0;
+
+    while (completed < n) {
+        int i;
+        for (i = 0; i < n; i++) {
+            if (processes[i].remaining_time > 0) {
+                if (quantum_remaining == 0 || quantum_remaining > TIME_QUANTUM) {
+                    quantum_remaining = TIME_QUANTUM;
+                }
+                if (quantum_remaining >= processes[i].remaining_time) {
+                    time += processes[i].remaining_time;
+                    processes[i].remaining_time = 0;
+                    quantum_remaining -= processes[i].remaining_time;
+                    processes[i].turnaround_time = time - processes[i].arrival_time;
+                    processes[i].waiting_time = processes[i].turnaround_time - processes[i].burst_time;
+                    completed++;
+                } else {
+                    time += quantum_remaining;
+                    processes[i].remaining_time -= quantum_remaining;
+                    quantum_remaining = 0;
+                }
+            }
+        }
+    }
+
+    printf("PID\tArrival Time\tBurst Time\tTurnaround Time\tWaiting Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].pid, processes[i].arrival_time, 
+               processes[i].burst_time, processes[i].turnaround_time, processes[i].waiting_time);
+    }
+}
+
+int main() {
+    Process processes[MAX_PROCESSES];
+    int n;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    printf("Enter arrival time and burst time for each process:\n");
+    for (int i = 0; i < n; i++) {
+        processes[i].pid = i + 1;
+        printf("Process %d: ", i + 1);
+        scanf("%d %d", &processes[i].arrival_time, &processes[i].burst_time);
+        processes[i].remaining_time = processes[i].burst_time;
+    }
+
+    simulate(processes, n);
+
+    return 0;
+}
